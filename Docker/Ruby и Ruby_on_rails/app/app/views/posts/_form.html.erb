@@ -1,0 +1,23 @@
+<%= form_with model: @post, local: true do |form| %>
+
+<% if @post.errors.any? %>
+	<% @post.errors.full_messages.each do |msg| %>
+		<div class="alert alert-danger"><%= msg %></div>
+	<% end %>
+<% end %>
+
+<p>
+	Название<br>
+	<%= form.text_field(:title, {class:'form-control'}) %>
+</p>
+
+<p>
+	Текст статьи<br>
+	<%= form.text_area(:text, {class:'form-control'}) %>
+</p>
+
+<p>
+	<%= form.submit({class:'btn btn-success'}) %>
+</p>
+
+<% end %>

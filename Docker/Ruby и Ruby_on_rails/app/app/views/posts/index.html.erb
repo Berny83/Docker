@@ -1,0 +1,11 @@
+<h1>Список постов</h1>
+<% @post.each do |post| %>
+	<div class="card bg-light p-3">
+		<div class="card-block">
+			<h3 class="card-title"><%= post.title %></h3>
+			<p class="card-text"><%= post.text %></p>
+			<%= link_to "Читать далее", post_path(post), class:'card-link' %>
+		</div>
+	</div>
+	<br>
+<% end %>

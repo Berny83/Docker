@@ -1,0 +1,26 @@
+FROM ruby
+LABEL maintainer="aagrivan"
+RUN curl https://deb.nodesource.com/setup_12.x | bash
+RUN curl https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+
+RUN apt-get update && \
+		apt-get upgrade -y && \
+		apt-get install -y \
+		nodejs \
+		build-essential \
+		libpq-dev \
+		sqlite3 \
+		gem \
+		yarn
+#		rm -rf /var/lib/apt/lists/*
+RUN gem install bundler rails
+
+ONBUILD RUN rails new app
+
+ONBUILD COPY app /opt/app
+ONBUILD WORKDIR /opt/app
+ONBUILD EXPOSE 3000
+ONBUILD RUN bundle update --bundler
+ONBUILD RUN rails db:migrate
+ONBUILD RUN rails db:seed

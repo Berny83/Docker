@@ -1,0 +1,27 @@
+FROM ruby:latest
+LABEL maintainer="aagrivan"
+RUN apt-get update -y && \
+		apt-get upgrade -y && \
+		apt-get install -y sqlite3
+RUN gem install rails bundler
+RUN mkdir -p /opt/app
+
+ONBUILD COPY . /opt/app
+ONBUILD WORKDIR /opt/app
+ONBUILD EXPOSE 3000
+
+ONBUILD RUN bundle install
+ONBUILD RUN rails db:migrate
+ONBUILD RUN rails db:seed
+
+#RUN apt-get update && \
+#		apt-get upgrade -y && \
+#		apt-get install -y nodejs && \
+#		rm -rf /var/lib/apt/lists/*
+#RUN gem install bundler rails
+#ONBUILD COPY app /opt/app
+#ONBUILD WORKDIR /opt/app
+#ONBUILD EXPOSE 3000
+#ONBUILD RUN bundle update --bundler
+#ONBUILD RUN rails db:migrate
+#ONBUILD RUN rails db:seed
