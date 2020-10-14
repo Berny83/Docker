@@ -32,3 +32,6 @@ ENTRYPOINT (/opt/gitlab/embedded/bin/runsvdir-start &) && \
 # docker run --name ex03 -it --rm -p 8080:80 -p 8022:22 -p 8443:443 --privileged ex03
 # docker run --name ex03 -it --shm-size=4g --rm -p 8080:80 -p 8022:22 -p 8443:443 --privileged ex03
 # посл команда выводит ошибку
+
+# docker-machine -s "/Users/aagrivan/goinfre/.docker/machine" create --virtualbox-cpu-count="4" --virtualbox-memory "4096" --driver virtualbox Char
+# docker run -it -d --rm --cpus="4.0" --memory="4g" -p 8080:80 --privileged ex03

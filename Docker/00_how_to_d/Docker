@@ -1,0 +1,372 @@
+Docker = «контейнеризация»
+предназначена для разработки, развёртывания и запуска приложений в контейнерах.
+
+Docker provides the ability to package and run an application in a loosely isolated environment called a container. 
+The isolation and security allow you to run many containers simultaneously on a given host. 
+Containers are lightweight because they don’t need the extra load of a hypervisor, but run directly within the host machine’s kernel.
+
+Images – is a read-only template with instructions for creating a Docker container. 
+Often, an image is based on another image, with some additional customization. 
+For example, you may build an image which is based on the Ubuntu image, but installs the Apache web server 
+and your application, as well as the configuration details needed to make your application run.
+
+To build your own image, you create a Dockerfile with a simple syntax for defining the steps needed to create the image and run it. 
+Each instruction in a Dockerfile creates a layer in the image. 
+When you change the Dockerfile and rebuild the image, only those layers which have changed are rebuilt. 
+This is part of what makes images so lightweight, small, and fast, when compared to other virtualization technologies.
+
+Containers – is a runnable instance of an image. You can create, start, stop, move or delete a container using the Docker API or CLI. 
+You can connect a container to one or more networks, attach storage to it, or even create a new image based on its current state.
+By default, a container is relatively well isolated from other containers and its host machine. 
+You can control how isolated a container’s network, storage or other underlying subsystems are from other containers of from the host machine.
+
+A container is defined by its image as well as any configuration options you provide to it when you create or start it. 
+When a container is removed, any changes to its state that are not stored in persistent storage disappear.
+
+Images and containers
+Fundamentally, a container is nothing but a running process, with some added encapsulation features applied to it in order to keep it isolated from the host and from other containers. 
+One of the most important aspects of container isolation is that each container interacts with its own private filesystem; 
+this filesystem is provided by a Docker image. 
+An image includes everything needed to run an application – the code or binary, runtimes, dependencies and any other filesystem objects required.
+
+Containers and virtual machines
+A container runs natively on Linux and shares the kernel of the host machine with other containers. 
+It runs a discrete process, taking no more memory than any other executable, making it lightweight.
+
+By contract, a virtual machine (VM) runs a full-blown “guest” operating system with virtual access to host resources through a hypervisor. 
+In general, VMs incur a lot of overhead beyond what is being consumed by your application logic.
+
+Docker Machine is a tool that lets you install Docker Engine on virtual hosts, and manage the hosts with docker-machine commands. 
+You can use Machine to create Docker hosts on your local Mac or Windows box, on your company network, in your data center, or on cloud providers like Azure, AWS, or DigitalOcean.
+
+Practice
+V.2 Exercises 
+https://docs.docker.com/engine/reference/commandline/run/ - команды Docker
+
+
+01.	Create a virtual machine with docker-machine using the virtualbox driver, and named Char.
+•	docker-machine create --driver virtualbox Char
+*	docker-machine -s "/Users/aagrivane/goinfre/.docker/machine" create --driver virtualbox Char
+
+Запуск уже существующей вирт. Машины Char - docker-machine start Char / docker-machine stop Char
+
+
+02.	Get the IP address of the Char virtual machine.
+•	docker-machine ip Char
+
+
+03.	Define the variables needed by your virtual machine Char in the general env of your terminal, so that you can run the docker ps command without errors. You have to fix all four environment variables with one command, and you are not allowed to use your shell’s builtin to set these variables by hand.
+
+With Docker Machine, your Docker engine is running in a VM, which is effectively a remote machine, so your local CLI needs to be configured to connect to it. This is indeed the expected way to use Docker on a machine that does not natively support Docker, e.g. on Windows or Mac OS X. 
+The Docker documentation includes this step in its description for using Docker Machine here: https://docs.docker.com/machine/get-started/
+
+If you run docker-machine env default yourself, you will see that it simply suggests to set some environment variables, which allow the Docker
+commands to find the VM running the Docker daemon. Without these variables set, Docker simply does not know how to communicate with the Docker daemon.
+
+•	eval $(docker-machine env Char) - Connect your shell to the new machine
+
+Функция eval позволяет выполнить код, переданный ей в виде строки.
+-	Тебе нужно сообщить клиенту, где находится хост докера eval $(docker-machine env Char)
+-	Если коротко, то docker-machine env как раз выгружает переменные окружения, в которых в том числе содержится информация для подключения, 
+а ты просто делаешь eval этого (выполняет инструкции export, которые получаешь от этой команды)
+*	для того, чтобы сделать вирт.машину активной/переключиться на другую нужно снова установить переменные среды - eval $(docker-machine env Char)
+- все контейнеры и тома в ней сохранились.
+
+
+04.	Get the hello-world container from the Docker Hub, where it’s available.
+•	docker pull hello-world
+
+
+05.	Launch the hello-world container, and make sure that it prints its welcome message, then leaves it.
+•	docker run hello-world
+
+
+06.	Launch an nginx container, available on Docker Hub, as a background task. It should be named overlord, be able to restart on its own, and have
+its 80 port attached to the 5000 port of Char. You can check that your container functions properly by visiting http://<ip-de-char>:5000 on your
+web browser.
+•	docker run --name overlord --restart always -p 5000:80 -d nginx
+
+docker run - находит образ, создает контейнер поверх него и запускает контейнер. 
+Это сделано для удобства и скрывает детали двух команд. 
+
+-d – в фоновом режиме;
+$ docker ps –a – запущенные процессы - if container already exists in the system;
+•	If the container exists, remove it using: $ docker rm <name> Or forcefully using: $ docker rm -f <name>
+
+
+07.	Get the internal IP address of the overlord container without starting its shell and in one command.
+•	$ docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' overlord
+•	$ docker inspect --format '{{ .NetworkSettings.IPAddress}}' overlord
+
+$ docker inspect overlord
+inspect - provides detailed information on constructs controlled by Docker.
+
+
+08.	Launch a shell from an alpine container, and make sure that you can interact directly with the container via your terminal, and that the
+container deletes itself once the shell’s execution is done.
+•	docker run -it --rm alpine
+
+-it флаг для интерактивных процессов, таких как оболочка; 
+--rm удалит контейнер после выхода; 
+
+
+09.	From the shell of a debian container, install via the container’s package manager everything you need to compile C source code and push it onto a git repo (of course, make sure before that the package manager and the packages already in the container are updated). For this exercise, you should only specify the commands to be run directly in the container.
+•	docker run -dit --name test debian
+•	docker exec -it test /bin/sh
+•	apt-get update && apt-get upgrade –y
+apt-get install -y build-essential git
+
+ПРОВЕРКА ВНУТРИ КОНТЕЙНЕРА: dpkg -l | grep gcc и dpkg -l | grep git
+пакет build-essentials является справочным для всех пакетов, необходимых для компиляции пакета Debian. Обычно она включает компиляторы и библиотеки
+GCC/g++ и некоторые другие утилиты.
+
+
+10.	Create a volume named hatchery.
+•	docker volume create --name hatchery
+
+Существуют два способа, позволяющих сделать срок жизни данных большим срока жизни контейнера. 
+Один из способов заключается в использовании технологии bind mount. 
+При таком подходе к контейнеру можно примонтировать, например, реально существующую папку. 
+Работать с данными, хранящимися в такой папке, смогут и процессы, находящиеся за пределами Docker. 
+Минусы использования технологии bind mount заключаются в том, что её использование усложняет резервное копирование данных, миграцию данных,
+совместное использование данных несколькими контейнерами. 
+Гораздо лучше для постоянного хранения данных использовать тома Docker.
+
+Volume - Том — это файловая система, которая расположена на хост-машине за пределами контейнеров. 
+Созданием и управлением томами занимается Docker. Вот основные свойства томов Docker:
+- Они представляют собой средства для постоянного хранения информации.
+- Они самостоятельны и отделены от контейнеров.
+- Ими могут совместно пользоваться разные контейнеры.
+- Они позволяют организовать эффективное чтение и запись данных.
+- Тома можно размещать на ресурсах удалённого облачного провайдера.
+- Их можно шифровать.
+- Им можно давать имена.
+- Контейнер может организовать заблаговременное наполнение тома данными.
+- Они удобны для тестирования.
+
+
+11.	List all the Docker volumes created on the machine. Remember. VOLUMES. 
+•	docker volume ls
+
+
+12.	Launch a mysql container as a background task. It should be able to restart on its own in case of error, and the root password of the database should be Kerrigan. You will also make sure that the database is stored in the hatchery volume, that the container directly creates a database named zerglings, and that the container itself is named spawning-pool.
+•	docker run –d --name spawning-pool --restart=on-failure:7 -e MYSQL_ROOT_PASSWORD=Kerrigan -e MYSQL_DATABASE=zerglings -v hatchery:/var/lib/mysql mysql
+
+-e - set environment variables
+-v - Bind mount a volume
+
+ПРОВЕРКА:
+docker exec -it spawning-pool mysql -u root -p
+SHOW DATABASES;
+
+docker exec - применяется к запущенному контейнеру, запускает новый процесс внутри пространства процессов контейнера. 
+
+
+13.	Print the environment variables of the spawning-pool container in one command, to be sure that you have configured your container properly.
+•	docker inspect --format '{{ .Config.Env }}' spawning-pool
+•	docker exec spawning-pool env
+
+
+14.	Launch a wordpress container as a background task, just for fun. The container should be named lair, its 80 port should be bound to the 8080 port of the virtual machine, and it should be able to use the spawning-pool container as a database service. You can try to access lair on your machine via a web browser, with the IP address of the virtual machine as a URL. Congratulations, you just deployed a functional Wordpress website in two commands!
+
+*	docker system df - сколько же места реально занято на вашей машине Docker’ом - контейнерами, томами, образами.
+
+-	Wordpress - система управления содержимым сайта с открытым исходным кодом; написана на PHP; сервер базы данных — MySQL;
+выпущена под лицензией GNU GPL версии 2. Сфера применения — от блогов до достаточно сложных новостных ресурсов.
+-	docker  run -d --name lair -p 8080:80 --link spawning-pool:mysql wordpress
+--link name:alias - name — имя контейнера, alias — имя, под которым этот контейнер будет известен запускаемому.
+-	docker  run -d --rm --name lair -p 8080:80 --link spawning-pool:mysql wordpress
+
+ЗАМЕТКА: --link - устарела, теперь нужно использовать --network, для этого сначала нужно создать мост. 
+--link spawning-pool:database - не работает из-за него myphpadmin
+Сервер: db via TCP/IP - по дефолту сервер mysql называется db, поэтому другие названия приводят к ошибке
+«Невозможно подключиться к серверу mysql»(?)
+
+Чтобы связать между собой контейнеры:
+	По умолчанию для контейнеров используется bridge. При первом запуске контейнера Docker создает дефолтную bridge-сеть с одноименным названием -
+	используется всеми контейнерами, для лучшей изоляции надо создать пользовательский мост.
+	Эту сеть можно увидеть в общем списке по команде docker network ls.
+	Чтобы проинспектировать ее свойства, запустим команду docker network inspect bridge. https://habr.com/ru/post/333874/
+	
+	Link - делится переменными окружения между контейнерами в отличие от network. Однако в link отсутствует двухсторонней коммуникации между
+	связанными контейнерами - сложности при более 2х связанных контейнеров. 
+	To share environment variables: 1) Multiple containers can mount a file or directory containing the shared information, using a Docker volume. 
+	2) Multiple containers can be started together using docker-compose and the compose file can define the shared variables.
+	3) You can use swarm services instead of standalone containers, and take advantage of shared secrets and configs.
+	
+	Containers connected to the same user-defined bridge network effectively expose all ports to each other. 
+	For a port to be accessible to containers or non-Docker hosts on different networks, that port must be published using the -p or --publish flag.
+
+•	docker network create my-bridge-network
+•	docker network connect my-bridge-network spawning-pool
+•	docker  run -d --rm --name lair -p 8080:80 --network my-bridge-network -e PMA_HOST=spawning-pool wordpress
+
+
+15.	Launch a phpmyadmin container as a background task. It should be named roach-warden, its 80 port should be bound to the 8081 port of the virtual machine and it should be able to explore the database stored in the spawning-pool container.
+•	docker run --detach --name roach-warden --publish 8081:80 --network my-bridge-network -e PMA_HOST=spawning-pool phpmyadmin/phpmyadmin
+•	docker network disconnect my-bridge-network roach-warden
+•	docker network rm my-bridge-network
+
+
+16.	Look up the spawning-pool container’s logs in real time without running its shell.
+•	docker logs --follow spawning-pool
+
+
+17.	Display all the currently active containers on the Char virtual machine.
+•	docker ps - только запущенные
+•	docker ps -a - все контейнеры
+
+*	docker images - показывает размер образа
+*	docker ps -as - также добавляется размер
+
+
+18.	Relaunch the overlord container.
+•	docker restart overlord
+
+
+19.	Launch a container name Abathur. It will be a Python container, 2-slim version, its /root folder will be bound to a HOME folder on your host, and its 3000 port will be bound to the 3000 port of your virtual machine. You will personalize this container so that you can use the Flask micro-framework in its latest version. You will make sure that an html page displaying "Hello World" with tags can be served by Flask. You will test that your container is properly set up by accessing, via curl or a web browser, the IP address of your virtual machine on the 3000 port. You will also list all the necessary commands in your repository. 
+•	docker run --detach -it --name Abathur -v $HOME:/root --publish 3000:3000 python:2-slim
+•	docker exec Abathur pip install Flask
+//•	docker exec -it Abathur /bin/sh 
+•	echo -e 'from flask import Flask\napp = Flask(__name__)\n@app.route('\''/'\'')\ndef hello_world():\n\treturn '\''<h1>Hello, World!</h1>'\''' > $HOME/hello-world.py
+•	docker exec -e FLASK_APP=/root/hello.py Abathur flask run --host=0.0.0.0 --port 3000
+
+Flask — фреймворк для создания веб-приложений на языке программирования Python, использующий набор инструментов Werkzeug, а также шаблонизатор
+Jinja2. Относится к категории так называемых микрофреймворков — минималистичных каркасов веб-приложений, сознательно предоставляющих лишь самые
+базовые возможности.
+•	Для запуска сервера разработки нужно использовать метод run() объекта Flask. 
+Условие __name__ == "__main__" гарантирует, что метод run() будет вызван только в том случае, если main.py будет запущен, как основная программа.
+Если попытаться использовать метод run() при импорте main.py в другой модуль Python, он не вызовется.
+•	host='0.0.0.0' - делаем сервер публично доступным.
+
+
+20.	Create a local swarm, the Char virtual machine should be its manager.
+•	docker swarm init --advertise-addr $(docker-machine ip Char)
+ПРОВЕРКА:	docker node ls - command to view information about nodes
+			docker info - to view the current state of the swarm
+
+The --advertise-addr flag configures the manager node to publish its address. 
+The other nodes in the swarm must be able to access the manager at the IP address.
+
+The output includes the commands to join new nodes to the swarm. 
+Nodes will join as managers or workers depending on the value for the --token flag.
+
+
+21.	Create another virtual machine with docker-machine using the virtualbox driver, and name it Aiur.
+•	docker-machine create --driver virtualbox Aiur
+*	docker-machine -s "/Users/aagrivane/goinfre/.docker/machine" create --driver virtualbox Char
+
+ПРОВЕРКА:	docker-machine ls
+
+
+22.	Turn Aiur into a slave of the local swarm in which Char is leader (the command to take control of Aiur is not requested).
+•	docker-machine ssh Aiur "docker swarm join --token $(docker swarm join-token --quiet worker) $(docker-machine ip Char):2377"
+•	docker-machine ssh Aiur "docker swarm join --token $(docker swarm join-token worker -q) $(docker-machine ip Char):2377"
+
+ПРОВЕРКА:	docker node ls
+If you use Docker Machine, you can connect to it via SSH using the following command:
+$ docker-machine ssh manager1
+To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
+--quiet, -q - only display ID’s
+
+Docker Swarm
+При преобразовании хостов в кластер нужно воспользоваться утилитой кластеризации Docker Swarm. 
+Хост, находящийся в его составе, называется «узлом» (node), который бывает управляющим или рабочим. 
+Один кластер содержит только один управляющий «узел».
+
+Некоторые возможности утилиты
+Управление нагрузочными характеристиками — осуществляется оптимизация рассылки запросов между хостами, обеспечивая на них равномерную нагрузку.
+Динамическое управление — допускается добавление элементов в swarm-кластер без дальнейшего его перезапуска.
+Возможность масштабирования — позволяет добавлять или удалять docker-образ для автоматического создания контейнера.
+Восстановление «узла» после сбоя — работоспособность каждого хоста постоянно контролируется управляющим «узлом». 
+При сбое кластера происходит его восстановление и перезапуск.
+Rolling-update — выполняет обновление контейнеров. 
+Процедура может выполняться в определенной последовательности и с временной задержкой для запуска другого контейнера. Параметр указывается в настройках. 
+Если произойдет сбой обновления, то Docker Swarm выдаст ошибку и процесс повторится заново.
+
+
+23.	Create an overlay-type internal network that you will name overmind.
+•	docker network create --driver=overlay overmind
+ПРОВЕРКА:	docker network ls
+
+The overlay network driver creates a distributed network among multiple Docker daemon hosts. 
+This network sits on top of (overlays) the host-specific networks, allowing containers connected to it (including swarm service containers) to
+communicate securely when encryption is enabled. 
+Docker transparently handles routing of each packet to and from the correct Docker daemon host and the correct destination container.
+
+You can connect multiple containers to the same network. 
+Once connected, the containers can communicate using only another container’s IP address or name. 
+For overlay networks or custom plugins that support multi-host connectivity, containers connected to the same multi-host network but launched from
+different Engines can also communicate in this way.
+
+Overlay-сеть создает подсеть, которую могут использовать контейнеры в разных хостах swarm-кластера. 
+Контейнеры на разных физических хостах могут обмениваться данными по overlay-сети (если все они прикреплены к одной сети).
+
+
+24.	Launch a rabbitmq SERVICE that will be named orbital-command. You should define a specific user and password for the RabbitMQ service, they can be whatever you want. This service will be on the overmind network. 
+•	docker service create -d --name orbital-command --network overmind -e RABBITMQ_DEFAULT_USER=user -e RABBITMQ_DEFAULT_PASS=password rabbitmq
+•	docker inspect -f "{{.Spec.TaskTemplate.ContainerSpec.Env}}" orbital-command
+
+RabbitMQ — программный брокер сообщений на основе стандарта AMQP — тиражируемое связующее программное обеспечение, ориентированное на обработку
+сообщений. Создан на основе системы Open Telecom Platform, написан на языке Erlang, в качестве движка базы данных для хранения сообщений использует
+Mnesia. Его основная цель ‒ принимать и отдавать сообщения.
+
+
+25.	List all the services of the local swarm.
+•	docker service ls
+
+
+26.	Launch a 42school/engineering-bay service in two replicas and make sure that the service works properly (see the documentation provided at hub.docker.com). This service will be named engineering-bay and will be on the overmind network.
+•	docker service create --name engineering-bay --replicas 2 --network overmind -e OC_USERNAME=user -e OC_PASSWD=password 42school/engineering-bay
+
+Docker-сервисы — это «контейнеры в продакшене». Сервис запускает и конфигурирует образ: указывает используемые порты, сколько реплик контейнера
+запустить и т.д. Увеличение количества сервисов увеличивает число экземпляров контейнера, выполняющих эту часть программы, 
+но при этом затрачивается намного больше ресурсов.
+
+Docker-сервисы позволяют вам масштабировать контейнеры между несколькими Docker Daemons, а также использовать Docker Swarms.
+
+
+27.	Get the real-time logs of one the tasks of the engineering-bay service.
+•	docker service ps engineering-bay
+•	docker service logs --follow $(docker service ps engineering-bay -f "name=engineering-bay.1" -q)
+
+
+28.	... Damn it, a group of zergs is attacking orbital-command, and shutting down the engineering-bay service won’t help at all... You must send a troup of Marines to eliminate the intruders. Launch a 42school/marine-squad in two replicas, and make sure that the service works properly (see the documentation provided at hub.docker.com). This service will be named... marines and will be on the overmind network.
+•	docker service create --name marines --network overmind --replicas 2 -e OC_USERNAME=user -e OC_PASSWD=password 42school/marine-squad
+
+
+29.	Display all the tasks of the marines service.
+•	docker service ps marines
+
+
+30.	Increase the number of copies of the marines service up to twenty, because there’s never enough Marines to eliminate Zergs. (Remember to take a look at the tasks and logs of the service, you’ll see, it’s fun.)
+•	docker service scale marines=20
+
+ПРОВЕРКА:
+	docker service ps marines
+	docker service logs $(docker service ps marines --filter "name=marines.20" -q)
+
+
+31.	Force quit and delete all the services on the local swarm, in one command.
+•	docker service rm $(docker service ls -q)
+•	--quiet, -q - only display ID’s
+
+ПРОВЕРКА:
+	docker service ls
+
+
+32.	Force quit and delete all the containers (whatever their status), in one command.
+•	docker rm -f $(docker ps -a -q)
+•	docker container rm -f $(docker container ls -q)
+•	docker ps -a
+
+
+33.	Delete all the container images stored on the Char virtual machine, in one command as well.
+•	docker images -a
+•	docker rmi $(docker images -a -q)
+
+
+34.	Delete the Aiur virtual machine without using rm -rf.
+•	docker-machine rm -y Aiur
+•	-y - даем согласие на удаление заранее
+•	docker-machine ls
