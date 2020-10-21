@@ -1,0 +1,60 @@
+https://www.digitalocean.com/community/tutorials/linux-apache-mysql-php-lamp-ubuntu-16-04-ru#%D1%88%D0%B0%D0%B3-2-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-mysql
+apache, php, mysql
+
+
+sudo apt-get update
+sudo apt-get install apache2
+sudo apache2ctl configtest
+sudo ufw app list
+sudo ufw app info "Apache Full"
+sudo service apache2 start
+
+
+sudo apt install php
+Тестирование работы PHP на вашем веб-сервере:
+sudo nano /var/www/html/info.php
+<?php
+phpinfo();
+?>
+http://домен_или_IP_адрес_сервера/info.php
+
+sudo rm /var/www/html/info.php
+
+
+https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-phpmyadmin-on-ubuntu-12-04
+sudo apt-get install phpmyadmin apache2-utils
+
+After the installation has completed, add phpmyadmin to the apache configuration:
+sudo nano /etc/apache2/apache2.conf
+
+Add the phpmyadmin config to the file:
+Include /etc/phpmyadmin/apache.conf
+
+Restart apache: sudo service apache2 restart
+
+
+
+https://www.digitalocean.com/community/tutorials/apache-ubuntu-14-04-lts-ru
+Например, для наших сайтов мы создадим директории следующим образом:
+
+sudo mkdir /var/www/helen/assets
+
+sudo cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/helen.conf
+sudo nano /etc/apache2/sites-available/helen.conf
+
+ServerAdmin admin@helen-stories.com
+        ServerName helen-stories.com
+        ServerAlias www.helen-stories.com
+        DocumentRoot /var/www/helen/assets
+
+sudo a2ensite helen.conf
+sudo a2dissite 000-default.conf - Данная команда отключает дефолтный конфиг, который ищет сайт в /var/www или /var/www/html
+
+sudo service apache2 restart
+
+sudo nano /etc/hosts
+127.0.0.1   localhost
+127.1.1.1   helen-stories.com
+
+/var/www/helen/assets - сайт helen
+

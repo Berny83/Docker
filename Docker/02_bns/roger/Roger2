@@ -1,0 +1,702 @@
+*/
+19.12.19
+Физическая разбивка дисков - Это самый простой, надежный и совместимый «дедовский» метод. 
+Он позволяет четко очертить границы разделов и их взаимное положение на диске.
+При разбивке диска можно учесть его физические особенности и получить некоторый прирост производительности. 
+
+Логическая разбивка дисков
+Не бойтесь LVM — он не такой страшный. 
+С его помощью можно переразбивать диски, расширять партиции, добавлять физические устройства и расширяться на них, делать теневое копирование, бекап аналогичный «time machine» появился еще примерно в 2002 году. 
+Не бойтесь, делайте бекап и пользуйтесь гибкостью LVM.
+Для работы LVM, MD, DM обязательно нужен физический раздел /boot который позволит загрузчику(grub, Lilo etc) скачать минимальный образ системы (initrd) с необходимыми драйверами и конфигами для старта основной системы.
+
+1) Разбила диски на 1 primary - 4,5; 2 logical - 1 и 3,5
+8 Gb - fdisk -l
+lsblk - используется, чтобы узнать инфо о всех блочных устройствах, которыми являются разделы жестких дисков
+и других устройств хранения данных (оптических приводов, флэш-накопителей)
+lsblk -a - все блочные устройства в вашей системе
+
+
+Обновление индекса пакетов: Индекс пакетов APT по существу база данных доступных пакетов из репозиториев, определенных в файле /etc/apt/sources.list и каталоге /etc/apt/sources.list.d . 
+Для обновления локального индекса пакетов до последних изменений в репозиториях наберите следующее:
+
+sudo apt-get update
+Обновление пакетов: Со временем обновленные версии установленных на вашем компьютере пакетов могут стать доступными в репозиториях (например, обновления безопасности). 
+Для обновления вашей системы сначала обновите ваш индекс пакетов, как показано выше, а затем выполните:
+
+sudo apt-get upgrade
+
+2) Проверила установленные - apt list --installed
+
+3) Обновила индекс пакетов и пакеты - apt-get update -y && apt-get upgrade -y
+
+-y - ключ быстрого согласия
+
+4) Установила vim и sudo - apt-get install -y sudo vim
+
++++++++++ДЛЯ ИНИТ++++++++++++++
+5) Подключение к ssh с компа на виртуальную машину:
+
+- settings - network - Advanced - Port Forwarding:
+создание правил:
+http tcp 127.0.0.1 8000 10.0.2.15 80
+ssh tcp 127.0.0.1 2200 10.0.2.15 22
+
+- пишем в терминале ssh -p 2200 aagrivan@127.0.0.1
+жмем "yes" и вводим пароль виртуальной машины
+
+++++++++++++++END+++++++++++++++
+
+6) Дала права к sudo учетной записи aagrivan - usermod -aG sudo aagrivan
+
+usermod - изменяет учетную запись пользователя
+-a - добавить пользователя в дополнительную группу(ы). Использовать только вместе с параметром -G.
+-G, --groups ГРУППА1[,ГРУППА2,...[,ГРУППАN]]]
+Список дополнительных групп, в которых числится пользователь. Перечисление групп
+осуществляется через запятую, без промежуточных пробелов. На указанные группы
+действуют те же ограничения, что и для группы указанной в параметре -g.
+
+/etc/sudoers - добавляем NOPASSWD
+gde     ALL=(ALL:ALL) NOPASSWD:ALL
+
+
+7) Для обновления прав перезагрузила виртуальую машину. Then reboot the VM:
+sudo reboot
+
+20.12.19
+
+* We don’t want you to use the DHCP service of your machine. You’ve got to
+configure it to have a static IP and a Netmask in \30.
+
+DHCP (Dynamic Host Configuration Protocol) - протокол динамической настройки узла - IPv4 (DHCPv4), так и для IPv6 (DHCPv6).
+Сетевой протокол, позводяющий сетевым устройствам автоматически получать IP-адрес и другие параметры,
+необходимые для работы в сети TCP/IP. Данный протокол работает по модели "клиент-сервер".
+
+99% of Windows internet users use what are called “dynamic” IP addresses. 
+That means each time you connect to the internet, your ISP assigns you an IP address to use when you connect. 
+The next time you connect, you might get a different address. sud
+If you’re only connecting out to the internet, that’s all you need.
+If you expect people to connect in, say you want to run a web server that you want people to be able to find and visit, you’ll most likely need a static IP address. 
+A static IP is assigned by your ISP to you permanently, and identifies your server to the world.
+
+8) Установила netstat - инструмент для мониторинга входящих и исходящих сетевый подключений.
+
+sudo apt install net-tools -y
+netstat -rn - вывод таблицы маршрутизации в цифровом формате. Ключ -n - вместо хоста номер IP, 
+номер порта вместо имени порта, UID вместо имени пользователя - в цифровом формате.
+
+Подключаем второй виртуальный интерфейс - settings - adapter2 - enable network Adapter - host-only Adapter
+vboxnet0 (сам)
+
+File - Host network manager - vboxnet0 192.168.56.1/30
+
+Для смены IP с динамического на статический (чтобы стучаться на собственный сайт) открываем файл /etc/network/interfaces. И закомментируем линию
+iface enp0s3 inet dhcp (назначение динамического адреса для интерфейса enp0s3). inet dhcp - указывает на
+динамический адрес.
+
+auto lo - старт при загрузке
+iface lo inet loopback - интерфейс обратной петли lo, локальный интерфейс другими словами.
+allow-hotplug enp0s3 - инициализация интерфейса enp0s3 при определении ядром, грубо говоря запуск.
+
+ip a - появился второй виртуальный интерфейс, enp0s3 - для инета, enp0s8 - статический для сервера
+ip route show
+traceroute 8.8.8.8
+
+Прописываем:
+#iface enp0s3 inet dhcp
+iface enp0s3 inet static
+    address 10.0.2.15
+    netmask 255.255.255.0
+    broadcast 10.0.2.255
+    gateway 10.0.2.2
+    dns-nameservers 8.8.8.8
+auto enp0s8
+iface enp0s8 inet static
+    address 192.168.56.2 
+    netmask 255.255.255.252
+
+№№№№№№№№№№№№№№№№№№ НЕ ЗАБУДЬ СДЕЛАТЬ 3 КЛОНА ROGER ##################################
+
+sudo service networking restart
+sudo ifup enp0s3
+ping 8.8.8.8
+
+
+22.12.2019
+* You have to change the default port of the SSH service by the one of your choice.
+SSH access HAS TO be done with publickeys. SSH root access SHOULD NOT
+be allowed directly, but with a user who can be root.
+
+Порт прослушивания (порт для входящих соединений или порт сервера) используется программой, ждущей приглашений
+к соединениям от других программ. «Недоступным» порт прослушивания называют, когда эти приглашения не приходят, 
+а пропадают где-то по дороге. Ещё такой порт часто называют «закрытым», поэтому шаги, делающие порт доступным,
+называют «открытием порта».
+
+Порт — это просто любое условное число от 0 до 65535. Порт принято записывать как 16 битное число.
+Теоретически номер порта ни на что не влияет. Важно только, чтобы этот порт был свободен. 
+Впрочем, если ваша программа при запуске обнаружит, что указанный вами порт занят (т.е. его уже слушает 
+какая-то другая программа на вашем компьютере), то она вам сразу пожалуется сама.
+
+Сетевой порт — идентифицируемый номером системный ресурс, выделяемый приложению, выполняемому на некотором 
+сетевом хосте, для связи с приложениями, выполняемыми на других сетевых хостах 
+(в том числе c другими приложениями на этом же хосте).
+
+Сетевой порт – это сетевой ресурс, отображаемый в виде числа, которое определяет назначение входящих или 
+исходящих сетевых потоков данных на заданном устройстве.
+
+Для каждого из протоколов TCP и UDP стандарт определяет возможность одновременного выделения на хосте до 65536
+уникальных портов, идентифицирующихся номерами от 0 до 65535. При передаче по сети номер порта в заголовке 
+пакета используется (вместе с IP-адресом хоста) для адресации конкретного приложения 
+(и конкретного, принадлежащего ему, сетевого соединения).
+
+Порты могут разделяться на три группы:
+Общеизвестные (системные), их диапазон от 0 до 1023 закреплен стандартами организации IANA;
+Зарегистрированные в организации IANA (пользовательские), их диапазон от 1024 до 49151;
+Динамические (частные), диапазон которых находится между 49152 и 65535.
+
+9) Создаем идентификационный ключ RSA, чтобы иметь возможность заходить на удалённый сайт с вашей учётной 
+записи без ввода пароля.
+
+!!!! После такой настройки, если взломщик проникнет в вашу учётную запись или сайт, он получит доступ к сайту 
+с вашими правами, также не вводя пароль! Поэтому это никогда не следует делать от лица пользователя root.!!!!
+
+Делаем не на виртуальной машине:
+ssh-keygen -t rsa - создаем частный и публичный ключи и сохранены в 2 файлах. 
+-t rsa specifies the type of encryptation to RSA – Rivest–Shamir–Adleman Encryptaion Algorithm
+
+id_rsa - is a private key and should be securely kept, can be encrypted with a passphrase; 
+id_rsa.pub is a public key, should be copied and stored on the VM.
+
+Пробросила порты виртуальной машины:
+- settings - network - Advanced - Port Forwarding:
+создание правил:
+http tcp 8000 80
+https tcp 443 443
+ssh tcp 50005 50005
+
+Просмотр портов:
+sudo netstat -ltup
+Флаг -l указывает netstat вывести все прослушивающие сокеты (сокет это ip + порт), 
+-t показывает все TCP-соединения, -u отображает все соединения UDP, 
+а -p позволяет выводить имя приложения/программы, прослушивающее порт.
+
+Поменяла SSH default port of the VM open:
+Файл /etc/ssh/sshd_config
+#Comment the line 13 (‘P  ort 22 ’) if it is not yet, then add a new rule ‘ Port  <desired port> ’ on a new line. 
+It is recommended to use ports from 50000 and higher. Port 50005
+#Comment the line 33 (‘ PermitRootLogin prohibit-password ’) if it is not yet and add a new one ‘ PermitRootLogin no ’ 
+in order to disable root login via SSH.
+#Comment the line58(‘ PasswordAuthentication yes’ )if it is not yet and add a new one ‘ PasswordAuthentication no ’ 
+in order to disable SSH login with a password so as to connect to the VM via SSH with RSA keys only.
+
+# Restart SSH daemon on the VM:
+sudo service sshd restart
+
+10) Отправляем на VM:
+!!! Если существует файл .ssh/known_host - его нужно удалить в случае ошибки WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!
+Так как ключи ssh поменялись и поэтому в целях безопасности система не дает доступа.
+
+ssh-copy-id -i ~/.ssh/id_rsa.pub aagrivan@localhost -p 50005
+
++++++++++++++++++++++++++При неподключении++++++++++++++++++++++++++++++++++
+При неподключении "PasswordAuthentication no" - меняем на "PasswordAuthentication yes" - подключаемся по паролю, подкидываем ключ.
+Меняем на no, опять.
++++++++++++++++++++++++++END++++++++++++++++++++++++++++++++++++++++++++++++
+
+• You have to set the rules of your firewall on your server only with the services used
+outside the VM.
+
+11) Установила брандмауэр UFW - sudo apt install ufw -y
+# Show processes that listen ports:
+sudo lsof -i - (List Open Files) - программа для получения информации о запущенных в системе процессах и потоках. 
+Опция -i позволяет вывести сведения о файлах, интернет-адреса которых соответствуют заданному адресу. 
+Если при вызове команды не задавать адреса, эта опция позволяет вывести сведения обо всех интернет-сокетах и сетевых файлах.
+netstat -tulpn
+Чтобы выводить числовые значения (номер порта), а не имена служб, добавьте флаг -n.
+
+# Show processes that listen ports:
+sudo lsof -i
+netstat -tulpn
+
+# Enable firewall and create new rules for SSH, HTTP & HTTPS running the following commands:
+sudo ufw enable - активировать/включить ufw
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow 50005/tcp
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw logging low - опция сохранения логов - регистрирует все заблокированные пакеты, не соответствующие заданной политике 
+(с ограничением скорости), а также пакеты, соответствующие зарегистрированным правилам.
+sudo ufw reload
+sudo ufw status verbose
+
+###Check the VM's firewall rules:
+sudo ufw status verbose
+
+• You have to set a DOS (Denial Of Service Attack) protection on your open ports
+of your VM.
+
+12) Устанавливаем apache2:
+sudo apt-get install apache2 fail2ban -y
+
+Чтобы открыть стандартную посадочную страницу Apache, укажите свое доменное имя или IP сервера. 
+Если у вас нет домена, укажите внешний IP-адрес своего сервера. Если вы не знаете свой IP-адрес, вы можете узнать 
+его с помощью командной строки. Введите:
+hostname -I
+
+Свой сайт конфигурировала по пути /var/www/html/
+
+Можно создать отдельный каталог example.com, используя флаг -p для создания всех необходимых родительских каталогов:
+sudo mkdir -p /var/www/example.com/html
+
+Затем определите права на каталог с помощью переменной $USER:
+sudo chown -R $USER:$USER /var/www/example.com/html
+
+Права должны быть правильными, если вы не меняли unmask, но на всякий случай вы можете их проверить:
+sudo chmod -R 755 /var/www/example.com
+
+Затем создайте образец страницы index.html с помощью nano или другого редактора:
+sudo vi /var/www/example.com/html/index.html - конфигурируем - ставим свой сайт
+
+Создаем ssl-сертификат:
+
+Для работы TLS/SSL использует комбинацию открытого сертификата и закрытого ключа. 
+Закрытый ключ хранится на сервере и не разглашается. 
+SSL-сертификат используется открыто и доступен всем пользователям, запрашивающим контент.
+
+Чтобы создать самоподписанный сертификат и ключ, запустите команду:
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/apache-selfsigned.key -out /etc/ssl/certs/apache-selfsigned.crt
+
+Команда задаст ряд вопросов. Рассмотрим компоненты команды подробнее:
+
+openssl: базовый инструмент командной строки для создания и управления сертификатами, ключами и другими файлами OpenSSL.
+req: эта подкоманда указывает, что на данном этапе нужно использовать запрос на подпись сертификата X.509 (CSR). 
+X.509 – это стандарт инфраструктуры открытого ключа, которого придерживаются SSL и TLS при управлении ключами и сертификатами. 
+То есть, данная команда позволяет создать новый сертификат X.509.
+—x509: эта опция вносит поправку в предыдущую субкоманду, чтобы вместо запроса на подпись сертификата создать самоподписанный сертификат.
+—nodes: пропускает опцию защиты сертификата парольной фразой. Нужно, чтобы при запуске сервер Apache имел возможность читать файл без вмешательства пользователя. 
+Установив пароль, придется вводить его после каждой перезагрузки.
+—days 365: эта опция устанавливает срок действия сертификата (как видите, в данном случае сертификат действителен в течение года).
+—newkey rsa:2048: эта опция позволяет одновременно создать новый сертификат и новый ключ. 
+Поскольку ключ, необходимый для подписания сертификата, не был создан ранее, нужно создать его вместе с сертификатом. 
+Данная опция создаст ключ RSA на 2048 бит.
+—keyout: эта опция сообщает OpenSSL, куда поместить сгенерированный файл ключа.
+—out: сообщает OpenSSL, куда поместить созданный сертификат.
+Как уже было сказано, все эти опции сгенерируют ключ и сертификат. 
+Заполните появившиеся поля данными о сервере, которые будут отображаться в сертификате.
+
+Самой важной строкой является Common Name (введите FQDN или свое имя). Как правило, 
+в эту строку вносят доменное имя, с которым нужно связать сервер. 
+В случае если доменного имени нет, внесите в эту строку IP-адрес сервера. В целом эти поля выглядят примерно так:
+
+Country Name (2 letter code) [AU]:US
+State or Province Name (full name) [Some-State]:New York
+Locality Name (eg, city) []:New York City
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:Bouncy Castles, Inc.
+Organizational Unit Name (eg, section) []:Ministry of Water Slides
+Common Name (e.g. server FQDN or YOUR name) []:192.168.56.2
+Email Address []:admin@your_domain.com
+
+Файлы ключа и сертификата будут помещены в каталог /etc/ssl.
+
+2: Настройка Apache для поддержки SSL
+Итак, на данном этапе файлы ключа и сертификата созданы и хранятся в каталоге /etc/ssl. 
+Теперь нужно отредактировать настройки Apache:
+
+Создать сниппет конфигураций, указывающий место хранения файлов SSL-сертификата и ключа.
+Настроить виртуальный хост Apache для поддержки сертификата SSL.
+Настроить незашифрованные виртуальные хосты для автоматической переадресации запросов на зашифрованный хост (опционально).
+Местонахождение ключа и сертификата
+Для начала нужно создать сниппет конфигураций Apache, определяющий некоторые параметры SSL; 
+здесь можно выбрать метод шифрования SSL и включить дополнительные функции безопасности. 
+Заданные здесь параметры в дальнейшем могут быть использованы любыми виртуальными хостами для поддержки SSL.
+
+Создайте новый сниппет Apache в каталоге etc/apache2/conf-available.
+Рекомендуется указать в названии файла его предназначение (к примеру, ssl-params.conf):
+
+sudo мш /etc/apache2/conf-available/ssl-params.conf
+
+Для безопасной настройки SSL обратимся к рекомендациям Remy van Elst на сайте Cipherli.st. 
+Этот сайт предназначен для распространения простых и надёжных параметров шифрования для популярного 
+программного обеспечения.
+
+Вставьте в файл ssl-params.conf следующее:
+
+SSLCipherSuite EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH
+SSLProtocol All -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
+SSLHonorCipherOrder On
+# Disable preloading HSTS for now.  You can use the commented out header line that includes
+# the "preload" directive if you understand the implications.
+# Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+Header always set X-Frame-Options DENY
+Header always set X-Content-Type-Options nosniff
+# Requires Apache >= 2.4
+SSLCompression off
+SSLUseStapling on
+SSLStaplingCache "shmcb:logs/stapling-cache(150000)"
+# Requires Apache >= 2.4.11
+SSLSessionTickets Off
+
+Настройка стандартного виртуального хоста Apache
+Теперь нужно настроить стандартный виртуальный хост Apache (/etc/apache2/sites-available/default-ssl.conf) для 
+поддержки SSL.
+
+Примечание: Если вы используете другой виртуальный хост, укажите его имя вместо /etc/apache2/sites-available/default-ssl.conf.
+Прежде чем приступить к настройке, создайте резервную копию файла хоста.
+
+sudo cp /etc/apache2/sites-available/default-ssl.conf /etc/apache2/sites-available/default-ssl.conf.bak
+
+Откройте хост в текстовом редакторе:
+sudo nano /etc/apache2/sites-available/default-ssl.conf
+
+
+В результате файл будет иметь такой вид:
+<IfModule mod_ssl.c>
+<VirtualHost _default_:443>
+ServerAdmin your_email@example.com
+ServerName server_domain_or_IP
+DocumentRoot /var/www/html
+ErrorLog ${APACHE_LOG_DIR}/error.log
+CustomLog ${APACHE_LOG_DIR}/access.log combined
+SSLEngine on
+SSLCertificateFile      /etc/ssl/certs/apache-selfsigned.crt
+SSLCertificateKeyFile /etc/ssl/private/apache-selfsigned.key
+<FilesMatch "\.(cgi|shtml|phtml|php)$">
+SSLOptions +StdEnvVars
+</FilesMatch>
+<Directory /usr/lib/cgi-bin>
+SSLOptions +StdEnvVars
+</Directory>
+</VirtualHost>
+</IfModule>
+
+Настройка переадресации
+На данный момент сервер поддерживает и HTTP, и HTTPS. Для более надёжной защиты сервера рекомендуется 
+отключить незашифрованный трафик HTTP.
+
+Отредактируйте виртуальный хост, разрешающий HTTP-трафик, и настройте переадресацию. 
+Откройте файл /etc/apache2/sites-available/000-default.conf:
+
+sudo vi /etc/apache2/sites-available/000-default.conf
+В блок VirtualHost добавьте директиву Redirect, которая будет переадресовывать весь незашифрованный трафик:
+
+<VirtualHost *:80>
+. . .
+Redirect "/" "https://192.168.56.2/"
+. . .
+</VirtualHost>
+
+
+Обновление настроек Apache
+когда настройки веб-сервера и брандмауэра откорректированы. Можно включить SSL и настроенный для поддержки 
+сертификата виртуальный хост, а затем перезапустить веб-сервер.
+
+Включите модуль Apache для SSL, mod_ssl, и модуль mod_headers, который необходим для работы сниппета SSL:
+
+sudo a2enmod ssl
+sudo a2enmod headers
+
+Включите подготовленный виртуальный хост:
+sudo a2ensite default-ssl
+
+Также нужно включить файл ssl-params.conf:
+sudo a2enconf ssl-params
+
+Итак, теперь сайт и все необходимые модули включены. Проверьте синтаксис на наличие ошибок:
+sudo apache2ctl configtest
+
+Если ошибок нет, команда вернёт:
+Syntax OK
+
+Если вы видите такой результат, вы можете перезапустить сервер. 
+Если же в синтаксисе обнаружены ошибки, исправьте их. Затем перезапустите веб-сервер:
+sudo systemctl restart apache2
+
+5: Тестирование шифрования
+Теперь нужно убедиться, что трафик между сервером и клиентом шифруется. Откройте в браузере следующую ссылку:
+https://192.168.56.2
+
+Поскольку сертификат был подписан самостоятельно, браузер сообщит о его ненадёжности:
+Your connection is not private
+Attackers might be trying to steal your information
+(for example, passwords, messages, or credit cards). NET::ERR_CERT_AUTHORITY_INVALID
+
+Это нормальное поведение программы в подобной ситуации, поскольку браузер не может проверить подлинность хоста. 
+Однако в данном случае нужно только шифровать трафик, с чем самоподписанный сертификат вполне справляется, 
+потому предупреждение браузера можно пропустить. Для этого нажмите кнопку ADVANCED и кликните по предложенной ссылке.
+
+После этого вы получите доступ к своему сайту.
+Если вы настроили два блока server для переадресации трафика HTTP на HTTPS, проверьте, работает ли переадресация:
+http://server_domain_or_IP
+
+Постоянный редирект
+Если шифрование работает должным образом, настройте постоянный редирект вместо временного.
+Откройте файл виртуального хоста Apache:
+
+sudo vi /etc/apache2/sites-available/000-default.conf
+
+Найдите ранее добавленную директиву Redirect и установите значение permanent.
+<VirtualHost *:80>
+. . .
+Redirect permanent "/" "https://your_domain_or_IP/"
+. . .
+</VirtualHost>
+
+Проверьте ошибки в синтаксисе:
+sudo apache2ctl configtest
+
+Перезапустите Apache:
+sudo systemctl restart apache2
+
+Fail2ban сканирует лог-файлы (например, /var/log/httpd/error_log) и блокирует IP-адреса, которые ведут себя подозрительно, к примеру, 
+делая слишком много попыток входа с неверным паролем в попытках найти уязвимости и т.п.
+
+sudo service fail2ban status
+sudo service fail2ban stop
+
+Защита протокола SSH и apache2:
+
+[sshd]
+# To use more aggressive sshd modes set filter parameter "mode" in jail.local:
+# normal (default), ddos, extra or aggressive (combines all).
+# See "tests/files/logs/sshd" or "filter.d/sshd.conf" for usage example and details.
+#mode   = normal
+enabled = true
+port    = ssh
+filter  = sshd
+logpath = %(sshd_log)s
+backend = %(sshd_backend)s
+maxretry = 3
+bantime = 600
+
+
+[http-get-dos]
+enabled = true  - вкл тюрьмы
+port = http,https  - порт сервиса, на который ссылается Fail2ban. 
+Если используется порт по умолчанию, тогда можно использовать имя сервиса.
+filter = http-get-dos  - фильтр, который будет использоваться.
+logpath = /var/log/apache2/access.log  - расположение логов сервиса
+maxretry = 240  - Переменная maxretry устанавливает разрешенное клиенту количество попыток 
+аутентификации во временном окне findtime
+findtime = 60
+#ban for 2 days
+bantime = 172800
+#action = iptables[name=HTTP, port=http, protocol=tcp]
+
+
+Now we need to create the filter, to do that, create the file /etc/fail2ban/filter.d/http-get-dos.conf and 
+copy the text below in it:
+
+# Fail2Ban configuration file
+https://www.garron.me/en/go2linux/fail2ban-protect-web-server-http-dos-attack.html
+
+
+[Definition]
+
+# Option: failregex
+# Note: This regex will match any GET entry in your logs, so basically all valid and not valid entries are a match.
+# You should set up in the jail.conf file, the maxretry and findtime carefully in order to avoid false positives.
+
+failregex = ^<HOST> -.*"(GET|POST).*HTTP.*"$
+
+
+# Option: ignoreregex
+# Notes.: regex to ignore. If this regex matches, the line is ignored.
+# Values: TEXT
+#
+ignoreregex =
+
+Проверка Slowloris:
+perl slowloris.pl -dns 192.168.56.2:443
+sudo fail2ban-client set http-get-dos unbanip IP
+
+• You have to set a protection against scans on your VM’s open ports.
+
+13) Устанавливаем Portsentry:
+sudo apt install portsentry -y
+
+# Open the file ‘sudo vim  /etc/default/portsentry’, comment the lines9 and 10 (‘TCP_MODE="tcp"’, ‘ UDP_MODE="udp"’)and add two ones below them:
+TCP_MODE="atcp"
+UDP_MODE="audp"
+
+Мы используем portsentry в расширенном режиме для протоколов TCP и UDP. 
+Для этого необходимо изменить файл /etc/default/portsentry для того чтобы иметь TCP_MODE="atcp" и UDP_MODE="audp"
+
+# Open the file ‘/etc/portsentry/portsentry.conf’, comment the lines 35 and 36 ( BLOCK_UDP="0", BLOCK_TCP="0" ) and add two ones below them:
+BLOCK_UDP="1"
+BLOCK_TCP="1"
+
+# Какие телодвижения предпринимать при обнаружении сканирования:
+# 0 = ничё не делать - некатит, такая опция :)
+# 1 = заблокировать хост и запустить внешнюю команду
+# 2 = только запустить внешнюю команду
+
+sudo systemctl restart portsentry
+sudo systemctl status portsentry
+
+Portsentry от Psionic Technologies – один из трех компонентов системы обнаружения вторжения TriSentry. 
+Главная цель PortSentry – обнаружить сканирование портов на хосте и отреагировать на такие просмотры. 
+Это - одна из причин, по которой PortSentry должен рассматриваться, как утилита обнаружения вторжения. 
+Если атакующий не знает заранее, какие порты открыты и доступны в системе, он начнет сканирование, для того чтобы определить доступные сервисы. 
+В этот момент вступает в игру PortSentry. Инструмент контролирует и UDP порты на системе и, в зависимости от конфигурации, 
+ответит на идентифицированный просмотр. PortSentry контролирует TCP и UDP просмотры и способен обнаруживать большинство методов 
+скрытого сканирования инструментами, типа Nmap.
+
+# See the processes that listen ports:
+sudo lsof -i
+# or:
+netstat -tulpn
+
+# See the list the open ports
+sudo apt install nmap -y
+# or:
+nmap --open localhost
+nmap 192.168.56.2 (можно посмотреть логи ctrl+x)
+
+nmap  <VM’s  IP address>  -p T: <ports to scan (ex:22,80,443)>
+
+• Stop the services you don’t need for this project.
+
+# Print out at the active services:
+sudo service --status-all
+systemctl list-unit-files --type service --state enabled
+
+# You'll see the list of active and enabled services run on the VM. You may leave only the following ones: 
+cron - служба выполнения задач по расписанию,
+dbus - простая система межпроцессного обмена сообщениями (фоновая служба и утилиты),
+fail2ban - блокирование хостов, с которых делаются безуспешные попытки войти в систему,
+kmod - этот пакет содержит набор программ для загрузки, подключения и удаления модулей ядра Linux,
+networking - связанные с сетью модули,
+nginx - small, powerful, scalable web/proxy server,
+portsentry - portscan detection daemon,
+procps - утилиты для файловой системы /proc,
+rsyslog - гибкая служба ведения протокола работы системы и ядра,
+ssh - оболочка и сервер SSH (метапакет),
+udev - служба управления устройствами в /dev/,
+ufw - program for managing a Netfilter firewall,
+systemd-timesyncd - служба, которая была добавлена для синхронизации системных часов по сети,
+syslog - протокол передачи текстовых сообщений, прежде всего логов — сообщений о происходящих событиях,
+getty - программа для UNIX-подобных операционных систем, управляющая доступом к физическим и виртуальным терминалам (tty),
+autovt - связана с getty, если отключить вырубается консоль, символическая ссылка на getty@.service
+console-setup - настройка шрифта и раскладки клавиатуры для консоли. 
+keyboard-setup.service #Configuration for the keyboard   ??????? включить может быть
+AppArmor - это реализация Модуля безопасности линукс по управлению доступом на основе имен. 
+AppArmor ограничивает отдельные программы набором перечисленных файлов и возможностями в соответствии с правилами Posix 1003.1e.
+htcacheclean - очистка кэш на сервере
+console-setup - использование TTY (система предназначена для использования одного терминала несколькими процессами, некоторых возможностей ввода (например, отправка сигналов специальными клавишами, удаление введённых символов))
+cron — классический демон (компьютерная программа в системах класса UNIX), использующийся для периодического выполнения заданий в определённое время.
+dbus - система для того, чтобы различные приложения и сервисы могли общаться между собой.
+	Но с помощью Dbus могут взаимодействовать не только приложения, но и пользователи с приложениями.
+	DBus состоит из управляющего демона, API для языков программирования, с помощью которых приложения могут взаимодействовать с системой и консольного клиента.
+exim4 это агент пересылки почтовых сообщений, фактически является простым SMTP-сервером.
+hwclock.sh
+
+*avahi-daemon.service - Служба обнаружения сетевых устройств
+*cups.service - Службы поддержки печати
+*cups-browsed.service - Службы поддержки печати
+
+Disable and remove from autoload the other services with the commands (both should be run for each particular service):
+sudo systemctl stop  <service>
+sudo systemctl disable  <service>
+
+• Create a script that updates all the sources of package, then your packages and
+which logs the whole in a file named /var/log/update_script.log. Create a scheduled
+task for this script once a week at 4AM and every time the machine reboots.
+
+# Create a new file ‘/var/log/update_script.log’ and edit its permissions:
+sudo chmod 666 /var/log/update_script.log
+666 (-rw-rw-rw-) - все пользователи могут читать и редактировать
+
+# Create a new script ‘/etc/cron.d/update_packages.sh’ and edit its permissions:
+sudo chmod +x /etc/cron.d/update_packages.sh
+
+# Add the following to the file ‘/etc/cron.d/update_packages.sh’:
+
+#!/bin/sh
+LOG="/var/log/update_script.log"
+sudo apt-get update -y | tail -n1 > $LOG       //// обновить и записать последнюю 1 строчку в переменную LOG, количество строк для выдачи через ключ —n
+sudo apt-get upgrade -y | tail -n1 >> $LOG     //// апрейднуть и записать последнюю 1 строчку вниз файл переменной LOG
+DATE=$(date +%d.%m.%Y)                      //// команда date - выводит время; команда " date +%d.%m.%Y " - формат времени 21.01.2020
+TIME=$(date +%T)                            //// команда выводит время в формате 18:03:44
+echo "Last update: $DATE, $TIME" >> $LOG
+exit
+
+https://habr.com/ru/post/119436/ - цветной man, разукрасить вывод echo
+
+# Edit the file ‘ /etc/crontab ’ and add these lines of text to it: 
+@reboot    root /etc/cron.d/update_packages.sh    //// при загрузке/ребуте выполняет скрипт
+0 4 * * 1  root /etc/cron.d/update_packages.sh    //// в 4 утра каждый пнд выполняет скрипт
+
+# Restart  cron  like that:
+systemctl restart cron
+systemctl status cron
+
+• Make a script to monitor changes of the /etc/crontab file and sends an email to
+root if it has been modified. Create a scheduled script task every day at midnight.
+
+# Install mailutils in order to be able to send emails:
+sudo apt-get install mailutils -y
+
+Mailutils — это швейцарский нож для работы с электронной почтой. Он предоставляет богатый набор утилит и демонов для обработки электропочты. 
+Все они поддерживают почтовые ящики любых существующих форматов — от стандартных UNIX'овых maildrop'ов до maildir и удалённых ящиков, 
+предоставляющих прозрачный доступ через IMAP4, POP3 и SMTP. У Mailutils три целевые аудитории — обычные пользователи, системные администраторы 
+и разработчики обрабатывающего электропочту ПО.
+
+# Create a file ‘/etc/cron.d/monitor_changes.sh’  and change its permissions:
+sudo chmod +x /etc/cron.d/monitor_changes.sh
+
+# Add the following code to the ‘/etc/cron.d/monitor_changes.sh’: 
+#! /bin/sh
+MSG="File /etc/crontab has been modified!" 
+SUBJECT="Monitor crontab changes"
+TO="root@localhost"
+HASH="/etc/cron.d/hash.txt"
+FILE="/etc/crontab"
+test -f $HASH || sudo touch $HASH           ///// || - первая команда исполняется всегда, вторая — только в случае неудачного завершения первой
+CRON_HASH=$(sudo md5sum $FILE)
+if [ "$(cat $HASH)" != "$CRON_HASH" ]; then
+     echo $CRON_HASH > $HASH
+    echo $MSG | mail -s "$SUBJECT" $TO     ///// -s : опция задает тему для письма
+fi;
+exit
+
+Команда test -- это встроенная команда Bash, которая выполняет проверки файлов и производит сравнение строк. 
+Таким образом, в Bash-скриптах, команда test не вызывает внешнюю (/usr/bin/test) утилиту, которая является частью пакета sh-utils. 
+Аналогично, [ не производит вызов утилиты /usr/bin/[, которая является символической ссылкой на /usr/bin/test.
+
+md5sum — программа, позволяющая вычислять значения хеш-сумм (контрольных сумм) файлов по алгоритму MD5. В обычном случае вычисленные хеши 
+выводятся (можно сохранить в файле, для последующего использования). В других случаях программа сверяет вычисленные значения со значениями, 
+сохранёнными в файле (это удобно для массовой проверки целостности файлов).
+Наиболее часто программа используется для проверки правильной загрузки файлов по сети.
+
+# Add a line to the file ‘ /etc/crontab ’:
+0 0 * * * root /etc/cron.d/monitor_changes.sh            ////@daily - каждый день в 12 ночи
+
+# Restart  cron  and make sure root receives an email each time something has changed in ‘ /etc/crontab ’:
+systemctl restart cron
+systemctl status cron
+
+
+++++++++++++++++++++++++++++++++++DEPLOYMENT+++++++++++++++++++++++++++++++++++
+
+apt-get install git
+mkdir /var/repo/html.git
+cd /html.git
+git init --bare
+cd hooks
+vim post-receive
+	#!/bin/sh
+	git --work-tree=/var/www/html --git-dir=/var/repo/html.git checkout -f
+sudo chmod +x post-receive
+sudo chown -hR romm /var/repo/html.git/
+sudo chown -hR romm /var/www/html/
+exit
+MAC mkdir roger
+git init
+git remote add live ssh://romm@192.168.56.2:50005/var/repo/html.git
+vim index.html /// Edit
+git add .
+git commit -m "First test"
+git push live master
+
+++++++++++++++++++++++++++++++++++END++++++++++++++++++++++++++++++++++++++++++

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="eng" style="background-color:#256555;">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="css/style.css">
+		<link href="https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Montserrat:wght@400;800&display=swap" rel="stylesheet">
+		<title>Helen</title>
+	</head>
+	<body>
+		<header class="header" id="header">
+			<div class ="container">
+				<div class="header__inner">
+					<div class="header__logo">Helies</div>
+
+					<nav class="nav" id="nav">
+						<a class="nav__link" href="index.html">Menu</a>
+						<a class="nav__link" href="сервер.txt">Mytxt</a>
+					</nav>
+					
+				</div>
+			</div><!-- /.container -->
+		</header>
+		<section class="section">
+			<div class="container">
+				<div class="section__header">
+					<h3 class="section__suptitle">Apache2 Ubuntu</h3>
+					<h2 class="section__title">My instructions:</h2>
+					<div class="section__text">https://www.digitalocean.com/community/tutorials/linux-apache-mysql-php-lamp-ubuntu-16-04-ru#%D1%88%D0%B0%D0%B3-2-%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-mysql
+						<div>sudo apt-get update</div>
+						<div>sudo apt-get install apache2</div>
+						<div>sudo apache2ctl configtest</div>
+						<div>sudo ufw app list</div>
+						<div>sudo ufw app info "Apache Full"</div>
+						<div>sudo service apache2 start</div></div>
+						<hr>
+					<div class="section__text">sudo apt install php<br />
+						Тестирование работы PHP на вашем веб-сервере:<br />
+						sudo nano /var/www/html/info.php<br />
+						<?php<br />
+						phpinfo();<br />
+						?><br />
+						http://домен_или_IP_адрес_сервера/info.php<br />
+						sudo rm /var/www/html/info.php</div>
+						<hr>
+					<div class="section__text">https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-phpmyadmin-on-ubuntu-12-04<br />
+						sudo apt-get install phpmyadmin apache2-utils<br />
+						
+						After the installation has completed, add phpmyadmin to the apache configuration:<br />
+						sudo nano /etc/apache2/apache2.conf<br />
+						
+						Add the phpmyadmin config to the file:<br />
+						Include /etc/phpmyadmin/apache.conf<br />
+						
+						Restart apache: sudo service apache2 restart</div>
+						<hr>
+						<div class="section__text">https://www.digitalocean.com/community/tutorials/apache-ubuntu-14-04-lts-ru<br />
+						Например, для наших сайтов мы создадим директории следующим образом:<br />
+							
+						sudo mkdir /var/www/helen/assets<br />
+							
+						sudo cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/helen.conf<br />
+						sudo nano /etc/apache2/sites-available/helen.conf<br />
+							
+						ServerAdmin admin@helen-stories.com<br />
+							ServerName helen-stories.com<br />
+							ServerAlias www.helen-stories.com<br />
+							DocumentRoot /var/www/helen/assets<br />
+							
+						sudo a2ensite helen.conf<br />
+						sudo a2dissite 000-default.conf - отключает дефолтный конфиг, который ищет сайт в var/www или /var/www/html<br />
+							
+						sudo service apache2 restart<br />
+							
+						sudo nano /etc/hosts<br />
+						127.0.0.1   localhost<br />
+						127.1.1.1   helen-stories.com<br />
+							
+						/var/www/helen/assets - сайт helen</div>
+				</div>
+			</div>
+		</section>
+	</body>
+</html>

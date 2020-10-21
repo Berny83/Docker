@@ -1,0 +1,184 @@
+Устанавливаем apache2:
+https://timeweb.com/ru/community/articles/kak-ustanovit-apache-na-debian-10-1
+https://www.8host.com/blog/ustanovka-veb-servera-apache-v-debian-9/
+https://www.8host.com/blog/sozdanie-samopodpisannogo-ssl-sertifikata-dlya-apache-v-debian-10/
+
+$ sudo apt update
+
+$ sudo apt install apache2
+
+Шаг 2: настройка фаервола
+Теперь необходимо внести некоторые изменения в настройки фаервола.
+
+$ sudo ufw app list
+
+Профили Apache начинаются с WWW:
+WWW: этот профиль открывает 80 порт (обычный, незашифрованный веб-трафик);
+WWW Cache: профиль открывает только 8080 порт (иногда используется для кэширования и веб-прокси);
+WWW Secure: профиль открывает только 443 порт (TLS/SSL зашифрованный трафик);
+WWW Full: профиль открывает оба порта – 80 и 443.
+Из этих профилей желательно выбрать тот, который разрешает только те порты, которые вам нужны.
+
+Т.к. SSL на сервере еще не настроен, вам нужно открыть порт 80:
+
+$ sudo ufw allow 'WWW'
+Проверьте, вступили ли изменения в силу:
+
+$ sudo ufw status
+В выводе вы увидите, что трафик HTTP теперь разрешен:
+
+Status: active
+To                         Action  From
+--                         ------  ----
+OpenSSH                 ALLOW    Anywhere
+WWW                     ALLOW    Anywhere
+OpenSSH (v6)            ALLOW    Anywhere (v6)
+WWW (v6)                ALLOW    Anywhere (v6)
+Значит, все нормально, и порт успешно открыт.
+
+#### Проверка веб-сервера
+После установки Debian 9 запустит Apache. Чтобы убедиться, что веб-сервер запущен, запросите его состояние:
+
+$ sudo systemctl status apache2
+
+apache2.service - The Apache HTTP Server
+Loaded: loaded (/lib/systemd/system/apache2.service; enabled; vendor preset: enabled)
+Active: active (running) since Wed 2018-09-05 19:21:48 UTC; 13min ago
+Main PID: 12849 (apache2)
+CGroup: /system.slice/apache2.service
+├─12849 /usr/sbin/apache2 -k start
+├─12850 /usr/sbin/apache2 -k start
+└─12852 /usr/sbin/apache2 -k start
+Sep 05 19:21:48 apache systemd[1]: Starting The Apache HTTP Server...
+Sep 05 19:21:48 apache systemd[1]: Started The Apache HTTP Server.
+
+Чтобы открыть стандартную посадочную страницу Apache, укажите свое доменное имя или IP сервера. 
+Если у вас нет домена, укажите внешний IP-адрес своего сервера. Если вы не знаете свой IP-адрес, 
+вы можете узнать его с помощью командной строки. Введите:
+
+$ hostname -I
+
+Вы получите список адресов, разделенных пробелами. Проверьте каждый адрес в браузере.
+Также вы можете узнать свой IP, запросив его с помощью команды curl.
+
+Примечание: Чтобы установить curl, введите:
+$ sudo apt install curl
+
+Чтобы извлечь icanhazip.com (IPv4) с помощью curl, введите:
+
+$ curl -4 icanhazip.com
+
+Узнав свой внешний адрес, введите в браузер:
+
+http://server_domain_or_IP
+
+Вы увидите стандартную страницу Apache для Debian 9.
+Эта страница позволяет убедиться, что Apache работает правильно; также она содержит базовую информацию 
+о важных файлах и каталогах Apache.
+
+4: Управление процессами Apache
+Чтобы остановить сервер, введите:
+$ sudo systemctl stop apache2
+
+Запустить сервер может команда:
+$ sudo systemctl start apache2
+
+Для перезапуска используйте:
+$ sudo systemctl restart apache2
+
+Во время настройки Apache можно часто перезагружать, не сбрасывая соединений. Для этого вы можете использовать команду:
+$ sudo systemctl reload apache2
+
+По умолчанию Apache запускается автоматически вместе с сервером. Чтобы удалить Apache из автозагрузки, отключите сервис:
+$ sudo systemctl disable apache2
+
+Чтобы добавить Apache в автозагрузку, используйте команду:
+$ sudo systemctl enable apache2
+
+5: Настройка виртуального хоста (рекомендуется)
+На веб-сервере Apache вы можете использовать виртуальные хосты (аналогичные блокам server в Nginx) для 
+изоляции настроек и размещения нескольких доменов на одном сервере. Здесь используется условный домен example.com, 
+но вы должны заменить его собственным доменом.
+
+Apache в Debian 9 по умолчанию предоставляет один включенный виртуальный хост, который обслуживает каталог /var/www/html.
+Этого хватит для обслуживания одного сайта, но если вы хотите разместить несколько сайтов, 
+вам нужно создать новые виртуальные хосты. Создайте структуру каталогов в  /var/www для сайта example.com, а 
+/var/www/html оставьте как каталог по умолчанию, который будет обслуживаться, если запрос клиента не соответствует 
+другим сайтам. Создайте каталог example.com, используя флаг -p для создания всех необходимых родительских каталогов:
+
+$ sudo mkdir -p /var/www/example.com/html
+
+Затем определите права на каталог с помощью переменной $USER:
+$ sudo chown -R $USER:$USER /var/www/example.com/html
+
+Права должны быть правильными, если вы не меняли unmask, но на всякий случай вы можете их проверить:
+$ sudo chmod -R 755 /var/www/example.com
+
+Затем создайте образец страницы index.html с помощью nano или другого редактора:
+$ nano /var/www/example.com/html/index.html
+
+Сохраните и закройте файл.
+Чтобы Apache мог обслуживать этот контент, необходимо создать файл виртуального хоста с правильными директивами. 
+Вместо того чтобы напрямую изменять файл конфигурации по умолчанию, /etc/apache2/sites-available/000-default.conf, 
+создайте новый файл /etc/apache2/sites-available/example.com.conf:
+$ sudo nano /etc/apache2/sites-available/example.com.conf
+
+Вставьте в файл следующие конфигурации. Они похожи на конфигурации по умолчанию, но содержат правильный домен и каталог:
+<VirtualHost *:80>
+ServerAdmin admin@example.com
+ServerName example.com
+ServerAlias www.example.com
+DocumentRoot /var/www/example.com/html
+ErrorLog ${APACHE_LOG_DIR}/error.log
+CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+Обратите внимание, что DocumentRoot содержит путь нового каталога, а ServerAdmin – новый адрес электронной почты 
+администратора сайта example.com. Мы также добавили в файл две директивы: ServerName определяет базовый домен, 
+который должен соответствовать этому виртуальному хосту, а ServerAlias определяет алиасы.
+
+Сохраните и закройте файл.
+Включите файл с помощью инструмента a2ensite:
+$ sudo a2ensite example.com.conf
+
+Отключите стандартный сайт 000-default.conf:
+$ sudo a2dissite 000-default.conf
+
+Проверьте ошибки в конфигурации:
+$ sudo apache2ctl configtest
+
+Если ошибок нет, команда вернет:
+Syntax OK
+
+Перезапустите Apache:
+$ sudo systemctl restart apache2
+
+Теперь Apache обслуживает домен вашего сайта. Чтобы убедиться в этом, откройте ссылку http://example.com.
+
+6: Важные файлы и каталоги Apache
+Контент
+Контент сайта должен храниться в каталоге /var/www/html. По умолчанию из него обслуживается только стандартная страница Apache, которую вы видели ранее. Чтобы изменить корневой каталог сайта, отредактируйте настройки Apache.
+
+Конфигурации
+/etc/apache2: конфигурационный каталог Apache, в котором хранятся все конфигурационные файлы.
+/etc/apache2/apache2.conf: главный конфигурационный файл, в котором находятся глобальные настройки Apache. Он отвечает 
+за загрузку других файлов Apache.
+/etc/apache2/ports.conf: указывает порты, которые прослушивает Apache. По умолчанию веб-сервер Apache прослушивает 
+порт 80; также он может прослушивать порт 443 после включения модуля для поддержки SSL.
+/etc/apache2/sites-available/: каталог, в котором хранятся все файлы виртуальных хостов. Apache не будет использовать их, 
+пока они не связаны с каталогом sites-enabled (см. ниже). Обычно в этом каталоге происходит настройка виртуальных хостов.
+/etc/apache2/sites-enabled/: содержит включенные виртуальные хосты. При запуске или перезапуске Apache читает 
+конфигурационные файлы и ссылки в этом каталоге, чтобы скомпилировать конфигурации.
+/etc/apache2/conf-available/, /etc/apache2/conf-enabled/: каталоги подобны каталогам sites-available и 
+sites-enabled и работают по тому же принципу. В conf-available хранятся фрагменты конфигураций, которых нет 
+в виртуальном хосте. Файлы в conf-available включаются с помощью команды a2enconf и выключаются с помощью a2disconf.
+/etc/apache2/mods-available/, /etc/apache2/mods-enabled/: также работают по принципу sites-available и sites-enabled. 
+Эти каталоги содержат доступные и активные модули соответственно. Файлы с расширением .load содержат фрагменты 
+для загрузки конкретных модулей. Файлы с расширением .conf хранят настройки этих модулей. Модули включаются и 
+выключаются с помощью команд a2enmod и a2dismod.
+
+Логи сервера
+/var/log/apache2/access.log: по умолчанию каждый запрос  к веб-серверу записывается в этом логе доступа 
+(Apache можно настроить иначе).
+/var/log/apache2/error.log: по умолчанию в этом логе записываются все сообщения об ошибках. 
+Директива LogLevel в настройках Apache определяет, сколько данных будет вноситься в лог.

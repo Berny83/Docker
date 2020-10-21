@@ -1,0 +1,35 @@
+<!DOCTYPE html> <!-- Объявление формата документа -->
+<html>
+    <head> <!-- Техническаяинформация о документе-->
+        <meta charset="UTF-8"> <!-- Определяем кодировку символов документа -->
+        <meta name="robots" content="index, follow"> <!--Индексация и переход по ссылкам разрешен-->
+        <meta name="author" lang="en" content="aagrivan">
+        <title>FirstSite</title> <!--Задаем заголовок документа-->
+        <link rel="stylesheet" type="text/css" href="style.css"><!--Подключаем внешнюю таблицу стилей-->
+        <script src="script.js" defer></script> <!--Подключаем сценарии, defer - чтобы код выполнялся после загрузки html страницы-->
+    </head>
+    <body><!--Основная часть документа-->
+        <div class="background">
+            <div class="lighthouse">
+                <div id="top"></div>
+                <div id="top2"></div>
+                <div id="square"></div>
+                <div id="body"></div>
+            </div>
+            <div id="rocks"></div>
+            <div class="day-sun">
+                <svg width="300" height="260">
+                    <circle id="sun" cx="100" cy="100" r="40"></circle>
+                    <circle id="inner-sun" cx="100" cy="100" r="55"></circle>
+                    <circle id="outer-sun" cx="100" cy="100" r="75"></circle>
+                </svg>
+            </div>
+        </div>
+        <div class="container">
+        <div class="buttons" id="morning">Morning</div>
+        <div class="buttons" id="day">Day</div>
+        <div class="buttons" id="evening">Evening</div>
+        <div class="buttons" id="night">Night</div>
+        </div>
+    </body>
+</html>
